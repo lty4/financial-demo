@@ -234,6 +234,7 @@ class ActionTransactionSearch(Action):
             "grain": None,
             "search_type": None,
             "vendor_name": None,
+            "transactions_list": None,
         }
 
         if tracker.get_slot("zz_confirm_form") == "yes":
@@ -269,6 +270,7 @@ class ActionTransactionSearch(Action):
                 "start_time_formatted": tracker.get_slot("start_time_formatted"),
                 "end_time_formatted": tracker.get_slot("end_time_formatted"),
                 "vendor_name": vendor_name,
+                "transactions_list": transactions,
             }
 
             dispatcher.utter_message(
@@ -277,6 +279,9 @@ class ActionTransactionSearch(Action):
             )
             dispatcher.utter_message(
                 template=f"utter_found_{search_type}_transactions", **slotvars
+            )
+            dispatcher.utter_message(
+                template=f"utter_ask_transactions_list"
             )
         else:
             dispatcher.utter_message(template="utter_transaction_search_cancelled")
@@ -840,3 +845,17 @@ class ActionSwitchBackAsk(Action):
             dispatcher.utter_message(text=text, buttons=buttons)
 
         return [SlotSet("previous_form_name", None)]
+
+# class ActionGetStatement(Action):
+#     """Gets transactions statement"""
+
+#     def name(self) -> Text:
+#         return "action_get_statement"
+
+#     async def run(
+#         self, dispatcher, tracker: Tracker, domain: Dict[Text, Any],
+#     ) -> List[Dict[Text, Any]]:
+#         """Executes the custom action"""
+#         conversation_id = tracker.sender_id
+
+#         return []
