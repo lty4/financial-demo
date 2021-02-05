@@ -121,9 +121,6 @@ slots:
   transaction_history:
     type: any
     influence_conversation: false
-  transactions_list:
-    type: any
-    influence_conversation: false
   vendor_list:
     type: any
     influence_conversation: false

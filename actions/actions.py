@@ -234,7 +234,6 @@ class ActionTransactionSearch(Action):
             "grain": None,
             "search_type": None,
             "vendor_name": None,
-            "transactions_list": None,
         }
 
         if tracker.get_slot("zz_confirm_form") == "yes":
@@ -270,7 +269,6 @@ class ActionTransactionSearch(Action):
                 "start_time_formatted": tracker.get_slot("start_time_formatted"),
                 "end_time_formatted": tracker.get_slot("end_time_formatted"),
                 "vendor_name": vendor_name,
-                "transactions_list": transactions,
             }
 
             dispatcher.utter_message(
