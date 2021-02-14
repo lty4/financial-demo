@@ -121,6 +121,9 @@ slots:
   transaction_history:
     type: any
     influence_conversation: false
+  transaction_list:
+    type: any
+    influence_conversation: false
   vendor_list:
     type: any
     influence_conversation: false
@@ -157,13 +160,8 @@ responses:
       Amazon
   utter_ask_transaction_search_form_time:
   - text: In which timeframe would you like to search for transactions?
-  utter_ask_transactions_list:
-  - buttons:
-    - payload: /affirm
-      title: Yes, email the list
-    - payload: /deny
-      title: No
-    text: Would you like a list of these transactions?
+  utter_send_list:
+  - text: I'll send the list of transactions to the email on file.
   utter_no_payment_amount:
   - text: Sorry, I don't understand that payment amount.
   utter_no_paymentdate:
@@ -271,6 +269,7 @@ actions:
 - action_show_balance
 - action_show_recipients
 - action_show_transfer_charge
+- action_get_statement
 - action_handoff
 - action_handoff_options
 - action_pay_cc

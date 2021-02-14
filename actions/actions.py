@@ -244,6 +244,7 @@ class ActionTransactionSearch(Action):
 
             if vendor_name:
                 transactions = transactions_subset.get(vendor_name.lower())
+                trimmed_vendor = vendor_name
                 vendor_name = f" with {vendor_name}"
             else:
                 transactions = [
@@ -261,6 +262,7 @@ class ActionTransactionSearch(Action):
                 if transaction_date < start_time or transaction_date > end_time:
                     transactions.pop(i)
 
+            slots["transaction_list"] = transactions
             numtransacts = len(transactions)
             total = sum([t.get("amount") for t in transactions])
             slotvars = {
@@ -276,15 +278,39 @@ class ActionTransactionSearch(Action):
                 **slotvars,
             )
             dispatcher.utter_message(
-                template=f"utter_found_{search_type}_transactions", **slotvars
-            )
-            dispatcher.utter_message(
-                template=f"utter_ask_transactions_list"
+                template=f"utter_found_{search_type}_transactions", **slotvars,
             )
         else:
             dispatcher.utter_message(template="utter_transaction_search_cancelled")
+        
+        slots["vendor_name"] = trimmed_vendor
 
         return [SlotSet(slot, value) for slot, value in slots.items()]
+
+
+class ActionGetStatement(Action):
+    """Gets transactions statement"""
+
+    def name(self) -> Text:
+        return "action_get_statement"
+
+    async def run(
+        self, 
+        dispatcher, 
+        tracker: Tracker, 
+        domain: Dict[Text, Any],
+    ) -> List[Dict]:
+        """Executes the custom action"""
+        
+        text = (f"Would you like me to email you this list of charges?")
+        buttons = [
+                {"payload": "/affirm", "title": "Send me the list"},
+                {"payload": "/deny", "title": "No thanks"},
+            ]
+
+        dispatcher.utter_message(text=text, buttons=buttons)
+
+        return []
 
 
 class ValidateTransactionSearchForm(CustomFormValidationAction):
@@ -843,17 +869,3 @@ class ActionSwitchBackAsk(Action):
             dispatcher.utter_message(text=text, buttons=buttons)
 
         return [SlotSet("previous_form_name", None)]
-
-# class ActionGetStatement(Action):
-#     """Gets transactions statement"""
-
-#     def name(self) -> Text:
-#         return "action_get_statement"
-
-#     async def run(
-#         self, dispatcher, tracker: Tracker, domain: Dict[Text, Any],
-#     ) -> List[Dict[Text, Any]]:
-#         """Executes the custom action"""
-#         conversation_id = tracker.sender_id
-
-#         return []

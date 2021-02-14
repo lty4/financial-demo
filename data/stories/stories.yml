@@ -25,3 +25,9 @@ stories:
   - action: action_show_transfer_charge
   - intent: affirm
   - action: utter_ok
+
+- story: tell user you will send the list of transctions when they affirm after action_get_statement
+  steps:
+  - action: action_get_statement
+  - intent: affirm
+  - action: utter_send_list
