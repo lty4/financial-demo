@@ -1,4 +1,4 @@
-FROM rasa/rasa-sdk:2.0.0
+FROM rasa/rasa-sdk:2.3.0
 
 COPY actions /app/actions
 
