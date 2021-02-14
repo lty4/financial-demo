@@ -162,6 +162,8 @@ responses:
   - text: In which timeframe would you like to search for transactions?
   utter_send_list:
   - text: I'll send the list of transactions to the email on file.
+  utter_no_statement:
+  - text: No problem. If you change your mind later, you can come back and make another request.
   utter_no_payment_amount:
   - text: Sorry, I don't understand that payment amount.
   utter_no_paymentdate:
@@ -270,6 +272,7 @@ actions:
 - action_show_recipients
 - action_show_transfer_charge
 - action_get_statement
+- action_send_statement
 - action_handoff
 - action_handoff_options
 - action_pay_cc

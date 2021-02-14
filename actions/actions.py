@@ -25,6 +25,8 @@ from actions.profile import create_mock_profile
 
 from actions.custom_forms import CustomFormValidationAction
 
+import requests
+
 
 logger = logging.getLogger(__name__)
 
@@ -288,31 +290,6 @@ class ActionTransactionSearch(Action):
         return [SlotSet(slot, value) for slot, value in slots.items()]
 
 
-class ActionGetStatement(Action):
-    """Gets transactions statement"""
-
-    def name(self) -> Text:
-        return "action_get_statement"
-
-    async def run(
-        self, 
-        dispatcher, 
-        tracker: Tracker, 
-        domain: Dict[Text, Any],
-    ) -> List[Dict]:
-        """Executes the custom action"""
-        
-        text = (f"Would you like me to email you this list of charges?")
-        buttons = [
-                {"payload": "/affirm", "title": "Send me the list"},
-                {"payload": "/deny", "title": "No thanks"},
-            ]
-
-        dispatcher.utter_message(text=text, buttons=buttons)
-
-        return []
-
-
 class ValidateTransactionSearchForm(CustomFormValidationAction):
     """Validates Slots of the transaction_search_form"""
 
@@ -377,6 +354,114 @@ class ValidateTransactionSearchForm(CustomFormValidationAction):
             return {"time": None}
 
         return parsedinterval
+
+
+class ActionGetStatement(Action):
+    """Gets transactions statement"""
+
+    def name(self) -> Text:
+        return "action_get_statement"
+
+    async def run(
+        self, 
+        dispatcher, 
+        tracker: Tracker, 
+        domain: Dict[Text, Any],
+    ) -> List[Dict]:
+        """Executes the custom action"""
+        
+        text = (f"Would you like me to email you this list of charges?")
+        buttons = [
+                {"payload": "/affirm", "title": "Send me the list"},
+                {"payload": "/deny", "title": "No thanks"},
+            ]
+        
+        dispatcher.utter_message(text=text, buttons=buttons)
+
+        return []
+
+
+class ActionSendStatement(Action):
+    """Decide whether to send statement based on last intent"""
+
+    def name(self) -> Text:
+        return "action_send_statement"
+
+    async def run(
+        self,
+        dispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any],
+    ) -> List[Dict]:
+
+        """Get the transactions list and check for an affirmative answer to sending list"""
+        conversation_id = tracker.sender_id
+        latest_intent = tracker.get_intent_of_latest_message(skip_fallback_intent=True)
+        
+        """Get full UiPath credentials"""
+        ui_client_id = "8DEv1AMNXczW3y4U15LL3jYf62jK93n5"
+        ui_user_key = "lhAGmCnkbFUR7aouWw5qggiu7bNOKeg5F5sJgOACv1g5r"
+        ui_auth_url = "https://account.uipath.com/oauth/token"
+        ui_tenant_url = "https://cloud.uipath.com/rasapresales/Demo"
+        ui_auth_json = {"grant_type": "refresh_token",
+                        "client_id": ui_client_id,
+                        "refresh_token": ui_user_key
+                        }
+        ui_tenant_header = {"X-UIPATH-TenantName":"Demo"}
+        ui_content_type = {"Content-Type":"application/json"}
+        ui_folder_id = "1154777"
+        ui_auth_headers = {**ui_tenant_header, **ui_content_type}
+        
+        """Authenticate to UiPath, get bearer token"""
+        if latest_intent == "affirm":
+            auth = requests.post(url=ui_auth_url, 
+                                    json=ui_auth_json, 
+                                    headers=ui_auth_headers
+                                )
+        else: return
+
+        ui_bearer_token = "Bearer " + auth.json()['access_token']
+        ui_bearer_header = {"Authorization":ui_bearer_token}
+        ui_org_unit_header = {"X-UIPATH-OrganizationUnitId":ui_folder_id}
+        
+        """Get workflow release information"""
+        ui_release_headers = {**ui_auth_headers, **ui_bearer_header, **ui_org_unit_header}
+        ui_release_filter = {"$filter":"ProcessKey eq 'ConfirmationEmail'"}
+        ui_release_url = ui_tenant_url + "/odata/Releases"
+          
+        release = requests.get(url=ui_release_url,
+                                headers=ui_release_headers, 
+                                params=ui_release_filter)
+        ui_release_key = release.json()['value'][0]['Key']
+        
+        """Get robot information"""
+        ui_robot_headers = ui_release_headers
+        ui_robot_filter = {"$filter":"Name eq 'Vision'"}
+        ui_robot_url = ui_tenant_url + "/odata/Robots"
+        
+        robot = requests.get(url=ui_robot_url,
+                                headers=ui_robot_headers,
+                                params=ui_robot_filter)
+        ui_robot_id = robot.json()['value'][0]['Id']
+
+        """Start the workflow job"""
+        ui_job_headers = ui_release_headers
+        ui_job_url = ui_tenant_url + "/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs"
+        ui_job_json = { "startInfo":
+                        { "ReleaseKey": ui_release_key,
+                            "Strategy": "Specific",
+                            "RobotIds": [ ui_robot_id ],
+                            "JobsCount": 0,
+                            "Source": "Manual",
+                            "InputArguments": "{\"conversation_id\":\"" + conversation_id + "\"}"
+                        } 
+                    }
+        
+        job = requests.post(url=ui_job_url,
+                            json = ui_job_json,
+                            headers=ui_job_headers) 
+
+        return []
 
 
 class ActionTransferMoney(Action):

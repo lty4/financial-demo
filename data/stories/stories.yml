@@ -31,3 +31,10 @@ stories:
   - action: action_get_statement
   - intent: affirm
   - action: utter_send_list
+  - action: action_send_statement
+
+- story: tell user no problem when they deny after action_get_statement
+  steps:
+  - action: action_get_statement
+  - intent: deny
+  - action: utter_no_statement
