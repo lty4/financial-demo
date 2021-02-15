@@ -1,5 +1,4 @@
 import requests
-import csv
 
 def get_transactions(id):
     conversation_id = id
